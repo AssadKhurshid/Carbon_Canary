@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Carbon Canary · CO₂ Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#070d1f;--surface:rgba(255,255,255,.04);--surface2:rgba(255,255,255,.07);
+  --border:rgba(255,255,255,.08);--primary:#00e5cc;--score:#b4ff4b;
+  --amber:#ff9f00;--danger:#ff4d6d;--text:#f0f4f8;--muted:#8899aa;
+  --r:20px;--gap:24px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 10% 0%,rgba(0,229,204,.06) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 90% 100%,rgba(180,255,75,.04) 0%,transparent 60%);pointer-events:none;z-index:0}
+.hidden{display:none!important}
+/* NAV */
+#nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,4vw,48px);height:64px;background:rgba(7,13,31,.8);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);transition:box-shadow .3s}
+#nav.scrolled{box-shadow:0 4px 32px rgba(0,0,0,.4)}
+.nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;text-decoration:none;color:var(--text)}
+.nav-bird{font-size:22px;transition:transform .3s}
+.nav-brand:hover .nav-bird{transform:scale(1.15) rotate(-5deg)}
+.nav-badge{font-size:10px;font-weight:700;letter-spacing:.08em;padding:3px 8px;border-radius:999px;background:rgba(0,229,204,.15);color:var(--primary);border:1px solid rgba(0,229,204,.3)}
+.nav-links{display:flex;align-items:center;gap:clamp(12px,3vw,32px)}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;font-family:inherit;font-weight:600;transition:all .2s;text-decoration:none}
+.btn-sm{height:36px;padding:0 16px;border-radius:12px;font-size:13px}
+.btn-primary{background:var(--primary);color:#070d1f;border-radius:14px}
+.btn-primary:hover{background:#00f5dc;box-shadow:0 0 24px rgba(0,229,204,.4);transform:translateY(-1px)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:14px}
+.btn-ghost:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)}
+.btn-danger-outline{background:transparent;color:var(--danger);border:1px solid rgba(255,77,109,.3);border-radius:12px;font-size:13px;height:36px;padding:0 14px}
+.btn-danger-outline:hover{background:rgba(255,77,109,.1)}
+/* HERO */
+#hero{position:relative;z-index:1;padding:clamp(48px,8vw,96px) clamp(16px,4vw,48px)}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,5vw,80px);align-items:center;max-width:1200px;margin:0 auto}
+@media(max-width:860px){.hero-grid{grid-template-columns:1fr}}
+.hero-label{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--primary);text-transform:uppercase;margin-bottom:16px}
+.hero-h1{font-size:clamp(36px,5vw,64px);font-weight:900;line-height:1.08;margin-bottom:20px}
+.hero-h1 .lime{background:linear-gradient(135deg,var(--score) 0%,var(--primary) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:clamp(15px,2vw,18px);color:var(--muted);line-height:1.7;max-width:480px;margin-bottom:32px}
+.trust-row{display:flex;flex-wrap:wrap;gap:12px}
+.trust-pill{display:flex;align-items:center;gap:7px;padding:8px 14px;background:var(--surface);border:1px solid var(--border);border-radius:999px;font-size:13px;font-weight:500;color:var(--muted)}
+.trust-pill span{color:var(--score);font-weight:700}
+/* UPLOAD CARD */
+.upload-card{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:32px;position:relative;overflow:hidden}
+.upload-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--primary),var(--score))}
+.upload-card h3{font-size:18px;font-weight:700;margin-bottom:6px}
+.upload-card .sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+.drop-zone{border:2px dashed var(--border);border-radius:16px;padding:36px 24px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.drop-zone.drag-over{border-color:var(--primary);background:rgba(0,229,204,.06)}
+.drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-icon{font-size:36px;margin-bottom:12px}
+.drop-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.drop-hint{font-size:12px;color:var(--muted)}
+.file-info{display:none;align-items:center;gap:12px;padding:12px 16px;background:rgba(0,229,204,.06);border:1px solid rgba(0,229,204,.2);border-radius:12px;margin-top:12px}
+.file-info.show{display:flex}
+.file-icon{font-size:24px}
+.file-details{flex:1;min-width:0}
+.file-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.lang-badge{padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.06em}
+.lang-de{background:rgba(0,229,204,.15);color:var(--primary);border:1px solid rgba(0,229,204,.3)}
+.lang-pl{background:rgba(180,255,75,.15);color:var(--score);border:1px solid rgba(180,255,75,.3)}
+.lang-un{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.samples-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:20px 0 10px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s;user-select:none}
+.chip:hover{border-color:var(--primary);color:var(--primary)}
+.chip.active{border-color:var(--score);background:rgba(180,255,75,.08);color:var(--score)}
+.analyze-btn{width:100%;height:52px;font-size:16px;border-radius:16px;margin-top:20px;letter-spacing:.02em}
+/* ANALYZING OVERLAY */
+#analyzing{position:fixed;inset:0;z-index:200;background:rgba(7,13,31,.92);backdrop-filter:blur(24px);display:none;align-items:center;justify-content:center;padding:24px}
+.an-card{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:28px;padding:clamp(32px,5vw,56px);max-width:520px;width:100%;text-align:center}
+.an-ring-wrap{position:relative;width:100px;height:100px;margin:0 auto 28px}
+.an-ring-wrap svg{transform:rotate(-90deg)}
+#an-track{stroke:rgba(255,255,255,.08)}
+#an-fill{stroke:var(--primary);stroke-linecap:round;stroke-dasharray:283;stroke-dashoffset:283;transition:stroke-dashoffset .4s ease}
+.an-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--primary)}
+.an-title{font-size:22px;font-weight:800;margin-bottom:8px}
+.an-subtitle{font-size:14px;color:var(--muted);margin-bottom:28px}
+.steps{display:flex;flex-direction:column;gap:12px;text-align:left;margin-bottom:24px}
+.step{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);border-radius:12px;border:1px solid var(--border);transition:all .3s}
+.step.active{border-color:var(--primary);background:rgba(0,229,204,.06)}
+.step.done{border-color:rgba(0,229,204,.3);background:rgba(0,229,204,.04)}
+.step-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .3s}
+.step.active .step-dot{border-color:var(--primary);background:rgba(0,229,204,.2);animation:pulse 1.2s infinite}
+.step.done .step-dot{border-color:var(--primary);background:var(--primary);color:#070d1f}
+.step-text{font-size:13px;color:var(--muted);transition:color .3s}
+.step.active .step-text,.step.done .step-text{color:var(--text)}
+.an-log{font-size:11px;color:var(--muted);font-family:monospace;min-height:16px;text-align:left;padding:0 4px}
+/* RESULTS */
+#results{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 clamp(16px,4vw,48px) 120px}
+.results-topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:24px 0;border-bottom:1px solid var(--border);margin-bottom:40px}
+.results-meta{display:flex;flex-direction:column;gap:4px}
+.results-title{font-size:20px;font-weight:700}
+.results-sub{font-size:13px;color:var(--muted)}
+.topbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+/* SCORE HEADER */
+.score-header{display:grid;grid-template-columns:1fr auto;gap:32px;align-items:start;margin-bottom:40px}
+@media(max-width:700px){.score-header{grid-template-columns:1fr}}
+.score-left{}
+.score-label{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+.score-big{font-size:clamp(72px,10vw,120px);font-weight:900;line-height:1;color:var(--score);font-variant-numeric:tabular-nums;text-shadow:0 0 60px rgba(180,255,75,.3)}
+.score-unit{font-size:clamp(20px,3vw,28px);font-weight:300;color:var(--muted);margin-left:8px;vertical-align:middle}
+.score-equivs{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}
+.equiv-pill{padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:999px;font-size:12px;color:var(--muted)}
+.eu-compare{margin-top:16px;display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.2);border-radius:12px;font-size:13px;font-weight:600;color:var(--danger)}
+.eu-compare.below{background:rgba(0,229,204,.08);border-color:rgba(0,229,204,.2);color:var(--primary)}
+/* CONFIDENCE RING */
+.confidence-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+.conf-ring-label{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.conf-ring-svg{position:relative}
+.conf-ring-svg circle{transition:stroke-dashoffset 1.4s cubic-bezier(.25,.46,.45,.94)}
+.conf-num{font-size:38px;font-weight:900;fill:var(--text)}
+.conf-denom{font-size:14px;fill:var(--muted)}
+.conf-label{font-size:11px;fill:var(--muted)}
+.conf-note{font-size:11px;color:var(--muted);text-align:center;max-width:140px}
+/* SECTION COMMON */
+.section-wrap{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:clamp(24px,3vw,36px);margin-bottom:24px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.section-title{font-size:18px;font-weight:700}
+.section-badge{font-size:11px;font-weight:700;letter-spacing:.06em;padding:4px 10px;border-radius:999px;background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+/* RADAR */
+.radar-wrap{position:relative;max-width:520px;margin:0 auto}
+.radar-legend{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.legend-dot{width:12px;height:12px;border-radius:2px;flex-shrink:0}
+/* CATEGORIES */
+.cat-list{display:flex;flex-direction:column;gap:4px}
+.cat-row{padding:14px 16px;border-radius:14px;border:1px solid transparent;transition:all .2s;cursor:pointer}
+.cat-row:hover{background:var(--surface2);border-color:var(--border)}
+.cat-row-top{display:grid;grid-template-columns:36px 1fr auto auto;gap:12px;align-items:center}
+.cat-icon{font-size:18px;text-align:center}
+.cat-name{font-size:14px;font-weight:600}
+.cat-num{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.cat-value{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.cat-bar-wrap{grid-column:2/-1;margin-top:8px;display:grid;grid-template-columns:1fr 80px;gap:12px;align-items:center}
+.bar-track{height:8px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:999px;transition:width 1.2s cubic-bezier(.25,.46,.45,.94);min-width:0}
+.bar-eu-marker{position:absolute;top:-4px;bottom:-4px;width:2px;border-radius:2px;background:rgba(255,255,255,.3)}
+.cat-gap{font-size:11px;font-weight:700;text-align:right;white-space:nowrap}
+.gap-up{color:var(--danger)}
+.gap-down{color:var(--primary)}
+.gap-ok{color:var(--muted)}
+.cat-badges{display:flex;gap:6px;align-items:center;margin-top:8px;grid-column:2/-1}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.06em}
+.badge-ok{background:rgba(0,229,204,.12);color:var(--primary);border:1px solid rgba(0,229,204,.25)}
+.badge-un{background:rgba(255,159,0,.12);color:var(--amber);border:1px solid rgba(255,159,0,.25)}
+.badge-mi{background:rgba(255,77,109,.1);color:var(--danger);border:1px solid rgba(255,77,109,.2)}
+.badge-lagging{background:rgba(255,77,109,.1);color:var(--danger);border:1px solid rgba(255,77,109,.2)}
+.cat-expand{display:none;padding:12px 0 4px;grid-column:1/-1;font-size:12px;color:var(--muted);border-top:1px solid var(--border);margin-top:12px}
+.cat-row.open .cat-expand{display:block}
+/* RECOMMENDATIONS */
+.recs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.rec-card{background:var(--surface2);border:1px solid var(--border);border-radius:18px;padding:20px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.rec-card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.rec-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:4px;border-radius:4px 0 0 4px}
+.rec-card.p-critical::before{background:var(--danger)}
+.rec-card.p-high::before{background:var(--amber)}
+.rec-card.p-medium::before{background:var(--primary)}
+.rec-card.p-low::before{background:rgba(255,255,255,.2)}
+.rec-priority{font-size:10px;font-weight:800;letter-spacing:.1em;margin-bottom:8px}
+.p-critical .rec-priority{color:var(--danger)}
+.p-high .rec-priority{color:var(--amber)}
+.p-medium .rec-priority{color:var(--primary)}
+.p-low .rec-priority{color:var(--muted)}
+.rec-icon{font-size:24px;margin-bottom:8px}
+.rec-title{font-size:15px;font-weight:700;margin-bottom:6px;line-height:1.4}
+.rec-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:14px}
+.rec-saving{font-size:12px;font-weight:700;color:var(--score);margin-bottom:14px}
+.rec-actions{display:flex;gap:8px;flex-wrap:wrap}
+/* LINE ITEMS TABLE */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{text-align:left;padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s;cursor:default}
+tbody tr:hover{background:var(--surface2)}
+tbody tr.row-top{background:rgba(180,255,75,.04)}
+tbody td{padding:12px 12px;vertical-align:middle}
+.td-field{font-weight:600}
+.td-source{font-size:10px;color:var(--muted);margin-top:2px}
+.td-co2{color:var(--score);font-weight:700;font-variant-numeric:tabular-nums}
+/* EMAIL SECTION */
+.email-tabs{display:flex;gap:4px;margin-bottom:16px}
+.email-tab{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .2s}
+.email-tab.active{background:var(--primary);color:#070d1f;border-color:var(--primary)}
+.email-body{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:16px;font-size:13px;line-height:1.8;white-space:pre-wrap;font-family:inherit;color:var(--text)}
+.email-to{font-size:11px;color:var(--muted);margin-bottom:8px}
+/* EXPORT BAR */
+#export-bar{position:fixed;bottom:0;left:0;right:0;z-index:50;background:rgba(7,13,31,.96);backdrop-filter:blur(24px);border-top:1px solid var(--border);display:none}
+#export-bar.show{display:block}
+.export-bar-inner{max-width:1200px;margin:0 auto;padding:14px clamp(16px,4vw,48px);display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.export-bar-title{font-size:14px;font-weight:700;color:var(--text)}
+.export-bar-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.export-bar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.export-bar-actions .btn{display:inline-flex;align-items:center;gap:10px;padding:9px 18px;min-width:0}
+.export-btn-icon{font-size:14px;font-weight:700;width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);border-radius:8px;flex-shrink:0}
+.btn-primary .export-btn-icon{background:rgba(7,13,31,.25)}
+.export-btn-text{display:flex;flex-direction:column;text-align:left}
+.export-btn-text strong{font-size:13px;font-weight:700;display:block}
+.export-btn-text small{font-size:10px;opacity:.6;display:block;font-weight:400}
+/* HOW IT WORKS */
+.how-section{padding:clamp(48px,6vw,80px) clamp(16px,4vw,48px);position:relative;z-index:1}
+.how-inner{max-width:1200px;margin:0 auto}
+.section-eyebrow{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--primary);text-transform:uppercase;margin-bottom:12px;text-align:center}
+.section-h2{font-size:clamp(28px,4vw,40px);font-weight:800;text-align:center;margin-bottom:48px}
+.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+@media(max-width:760px){.how-grid{grid-template-columns:1fr}}
+.how-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;position:relative;transition:transform .2s,box-shadow .2s}
+.how-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.how-num{font-size:48px;font-weight:900;color:rgba(0,229,204,.12);line-height:1;margin-bottom:16px}
+.how-icon{font-size:28px;margin-bottom:12px}
+.how-title{font-size:16px;font-weight:700;margin-bottom:8px}
+.how-desc{font-size:14px;color:var(--muted);line-height:1.7}
+/* FOOTER */
+footer{padding:32px clamp(16px,4vw,48px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:gap;gap:16px;font-size:13px;color:var(--muted);position:relative;z-index:1}
+/* ANIMATIONS */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease}
+.reveal.visible{opacity:1;transform:none}
+.reveal-d1{transition-delay:.1s}
+.reveal-d2{transition-delay:.2s}
+.reveal-d3{transition-delay:.3s}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* PRINT */
+@media print{
+  #nav,#hero,.how-section,footer,#export-bar,#analyzing{display:none!important}
+  body{background:#fff;color:#000}
+  #results{padding:0}
+  .section-wrap{border:1px solid #ddd;break-inside:avoid}
+}
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px}
+scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.12) transparent;
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav" role="navigation" aria-label="Main navigation">
+  <a class="nav-brand" href="#" aria-label="Carbon Canary home">
+    <span class="nav-bird" aria-hidden="true">🐦</span>
+    Carbon Canary
+    <span class="nav-badge">CSRD-READY</span>
+  </a>
+  <div class="nav-links">
+    <a href="#results" id="nav-results-link" class="hidden">Results</a>
+    <a href="#how">How It Works</a>
+    <a href="#methodology">Methodology</a>
+    <button class="btn btn-sm btn-primary" onclick="triggerDemo(0)" type="button">Try Demo</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<main id="hero">
+  <div class="hero-grid">
+    <div class="hero-text reveal">
+      <div class="hero-label">Scope 3 · EU JRC Certified · CSRD Aligned</div>
+      <h1 class="hero-h1">See your <span class="lime">hidden carbon.</span><br>In 30 seconds.</h1>
+      <p class="hero-sub">Upload any German or Polish supplier invoice. Carbon Canary extracts emission-relevant data, matches EU JRC + IPCC AR6 factors, and delivers an audit-ready Scope 3 report — instantly.</p>
+      <div class="trust-row">
+        <div class="trust-pill"><span>70–90%</span> of footprint is Scope 3</div>
+        <div class="trust-pill"><span>€0</span> supplier effort</div>
+        <div class="trust-pill"><span>EU JRC</span> every figure cited</div>
+      </div>
+    </div>
+    <div class="upload-card reveal reveal-d2">
+      <h3>Analyze your invoice</h3>
+      <p class="sub">PDF, image or scan · German or Polish · Results in 30s</p>
+      <div class="drop-zone" id="dropZone" role="button" aria-label="Upload invoice file" tabindex="0">
+        <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.tiff" aria-label="Choose invoice file">
+        <div class="drop-icon" aria-hidden="true">📄</div>
+        <div class="drop-title">Drop your invoice here</div>
+        <div class="drop-hint">or click to browse · PDF, PNG, JPG, TIFF</div>
+      </div>
+      <div class="file-info" id="fileInfo" role="status" aria-live="polite">
+        <div class="file-icon" aria-hidden="true">📎</div>
+        <div class="file-details">
+          <div class="file-name" id="fileName">—</div>
+          <div class="file-meta" id="fileMeta">—</div>
+        </div>
+        <span class="lang-badge" id="langBadge">—</span>
+      </div>
+      <div class="samples-label">Or try a sample invoice:</div>
+      <div class="chips">
+        <div class="chip" data-i="0" role="button" tabindex="0" aria-pressed="false">🇩🇪 Steel · Brandenburg</div>
+        <div class="chip" data-i="1" role="button" tabindex="0" aria-pressed="false">🇵🇱 Timber · Śląsk</div>
+      </div>
+      <button class="btn btn-primary analyze-btn" id="analyzeBtn" disabled type="button" aria-label="Analyze selected invoice">
+        Analyze Invoice →
+      </button>
+    </div>
+  </div>
+</main>
+
+<!-- ANALYZING OVERLAY -->
+<div id="analyzing" role="dialog" aria-modal="true" aria-label="Analyzing invoice" aria-live="polite">
+  <div class="an-card">
+    <div class="an-ring-wrap">
+      <svg width="100" height="100" viewBox="0 0 100 100" aria-hidden="true">
+        <circle id="an-track" cx="50" cy="50" r="45" fill="none" stroke-width="8"/>
+        <circle id="an-fill" cx="50" cy="50" r="45" fill="none" stroke-width="8" transform="rotate(-90 50 50)"/>
+      </svg>
+      <div class="an-pct" id="anPct">0%</div>
+    </div>
+    <div class="an-title">Analyzing invoice…</div>
+    <div class="an-subtitle" id="anDoc">Reading document</div>
+    <div class="steps" id="steps">
+      <div class="step" data-s="0"><div class="step-dot"></div><div class="step-text">Detecting document language</div></div>
+      <div class="step" data-s="1"><div class="step-dot"></div><div class="step-text">Extracting emission-relevant fields</div></div>
+      <div class="step" data-s="2"><div class="step-dot"></div><div class="step-text">Matching EU JRC + IPCC AR6 factors</div></div>
+      <div class="step" data-s="3"><div class="step-dot"></div><div class="step-text">Scoring confidence per field</div></div>
+      <div class="step" data-s="4"><div class="step-dot"></div><div class="step-text">Generating recommendations</div></div>
+    </div>
+    <div class="an-log" id="anLog" aria-live="polite"></div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<section id="results" class="hidden" aria-label="Analysis results">
+  <div class="results-topbar">
+    <div class="results-meta">
+      <div class="results-title" id="resTitle">—</div>
+      <div class="results-sub" id="resSub">—</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" id="pdfBtn" type="button" aria-label="Download PDF report">📄 PDF Report</button>
+      <button class="btn btn-ghost btn-sm" id="wordBtn" type="button" aria-label="Download Word report">📝 Word Report</button>
+      <button class="btn btn-danger-outline btn-sm" id="resetBtn" type="button" aria-label="Analyze another invoice">↩ New Analysis</button>
+    </div>
+  </div>
+
+  <!-- SCORE HEADER -->
+  <div class="score-header reveal">
+    <div class="score-left">
+      <div class="score-label">Total Scope 3 Emissions</div>
+      <div>
+        <span class="score-big" id="scoreBig" aria-live="polite">0</span>
+        <span class="score-unit">t CO₂e</span>
+      </div>
+      <div class="score-equivs" id="scoreEquivs"></div>
+      <div class="eu-compare" id="euCompare" aria-live="polite">—</div>
+    </div>
+    <div class="confidence-wrap" role="img" aria-label="Confidence rating">
+      <div class="conf-ring-label">Confidence</div>
+      <svg class="conf-ring-svg" width="160" height="160" viewBox="0 0 160 160" aria-hidden="true">
+        <circle cx="80" cy="80" r="68" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="12"/>
+        <circle id="confRing" cx="80" cy="80" r="68" fill="none" stroke="#00e5cc" stroke-width="12"
+          stroke-linecap="round" stroke-dasharray="427.26" stroke-dashoffset="427.26"
+          transform="rotate(-90 80 80)"/>
+        <text id="confNum" class="conf-num" x="80" y="82" text-anchor="middle" dominant-baseline="middle" font-family="Inter,sans-serif" font-weight="900" font-size="36" fill="#f0f4f8">—</text>
+        <text class="conf-denom" x="80" y="108" text-anchor="middle" font-family="Inter,sans-serif" font-size="13" fill="#8899aa">/ 10</text>
+        <text class="conf-label" x="80" y="126" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#8899aa">DATA CONFIDENCE</text>
+      </svg>
+      <div class="conf-note" id="confNote">Based on EU JRC source matching and field completeness</div>
+    </div>
+  </div>
+
+  <!-- RADAR -->
+  <div class="section-wrap reveal reveal-d1" id="radarSection">
+    <div class="section-head">
+      <div class="section-title">8-Category Scope 3 Radar</div>
+      <span class="section-badge">GHG PROTOCOL</span>
+    </div>
+    <div class="radar-wrap">
+      <canvas id="radarChart" height="400" aria-label="Radar chart showing your emissions vs EU average across 8 categories"></canvas>
+    </div>
+    <div class="radar-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(0,229,204,.5)"></div>Your Score</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(240,244,248,.4);border:1px dashed rgba(240,244,248,.4)"></div>EU SME Average</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(255,159,0,.4);border:1px dashed rgba(255,159,0,.5)"></div>Industry Benchmark</div>
+    </div>
+  </div>
+
+  <!-- CATEGORIES -->
+  <div class="section-wrap reveal reveal-d2" id="catSection">
+    <div class="section-head">
+      <div class="section-title">Scope 3 Category Breakdown</div>
+      <span class="section-badge" id="catMissing"></span>
+    </div>
+    <div class="cat-list" id="catList" role="list"></div>
+  </div>
+
+  <!-- RECOMMENDATIONS -->
+  <div class="section-wrap reveal reveal-d3" id="recSection">
+    <div class="section-head">
+      <div class="section-title">Recommendations</div>
+      <span class="section-badge" id="recCount"></span>
+    </div>
+    <div class="recs-grid" id="recGrid"></div>
+  </div>
+
+  <!-- LINE ITEMS -->
+  <div class="section-wrap reveal" id="lineSection">
+    <div class="section-head">
+      <div class="section-title">Extracted Line Items</div>
+      <span class="section-badge">EU JRC CITED</span>
+    </div>
+    <div class="table-wrap">
+      <table id="lineTable">
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Value</th>
+            <th>CO₂e</th>
+            <th>Confidence</th>
+            <th>EU Source</th>
+          </tr>
+        </thead>
+        <tbody id="lineBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SUPPLIER EMAIL -->
+  <div class="section-wrap reveal" id="emailSection">
+    <div class="section-head">
+      <div class="section-title">Supplier Gap Request</div>
+      <span class="section-badge">AUTO-GENERATED</span>
+    </div>
+    <div class="email-tabs" role="tablist" aria-label="Email language">
+      <button class="email-tab active" data-l="en" role="tab" aria-selected="true" tabindex="0">EN</button>
+      <button class="email-tab" data-l="de" role="tab" aria-selected="false" tabindex="-1">DE</button>
+      <button class="email-tab" data-l="pl" role="tab" aria-selected="false" tabindex="-1">PL</button>
+    </div>
+    <div class="email-to" id="emailTo"></div>
+    <div class="email-body" id="emailBody"></div>
+    <button class="btn btn-ghost btn-sm" id="copyBtn" style="margin-top:12px" type="button" aria-label="Copy email to clipboard">📋 Copy Email</button>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="how-inner">
+    <div class="section-eyebrow">How It Works</div>
+    <h2 class="section-h2">From invoice to audit-ready report in 30 seconds</h2>
+    <div class="how-grid">
+      <div class="how-card reveal"><div class="how-num">01</div><div class="how-icon">📤</div><div class="how-title">Upload your invoice</div><div class="how-desc">Drop any PDF, scan, or image of a supplier invoice in German or Polish. No templates, no structured data — raw documents work.</div></div>
+      <div class="how-card reveal reveal-d1"><div class="how-num">02</div><div class="how-icon">🧠</div><div class="how-title">AI extracts & matches</div><div class="how-desc">Carbon Canary reads the document, extracts quantities and materials, then cross-references EU JRC + IPCC AR6 emission factor databases.</div></div>
+      <div class="how-card reveal reveal-d2"><div class="how-num">03</div><div class="how-icon">📊</div><div class="how-title">Get your CO₂ report</div><div class="how-desc">See your total Scope 3 emissions, per-field confidence scores, gap analysis vs EU average, and actionable recommendations — ready for CSRD.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- METHODOLOGY -->
+<section style="padding:0 clamp(16px,4vw,48px) clamp(48px,6vw,80px);position:relative;z-index:1" id="methodology">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="section-eyebrow">Methodology</div>
+    <h2 class="section-h2">Built on verified EU standards</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px">
+      <div class="section-wrap reveal"><div style="font-size:28px;margin-bottom:12px">🇪🇺</div><div style="font-weight:700;margin-bottom:8px">EU JRC Database</div><div style="font-size:13px;color:var(--muted);line-height:1.7">Every emission factor is sourced from the EU Joint Research Centre's EPLCA database. Each value includes publication year and document reference.</div></div>
+      <div class="section-wrap reveal reveal-d1"><div style="font-size:28px;margin-bottom:12px">📖</div><div style="font-weight:700;margin-bottom:8px">IPCC AR6</div><div style="font-size:13px;color:var(--muted);line-height:1.7">Global Warming Potential values use IPCC Sixth Assessment Report (AR6) 100-year GWP factors, the current gold standard for corporate carbon accounting.</div></div>
+      <div class="section-wrap reveal reveal-d2"><div style="font-size:28px;margin-bottom:12px">✅</div><div style="font-weight:700;margin-bottom:8px">CSRD-Aligned</div><div style="font-size:13px;color:var(--muted);line-height:1.7">Output follows the GHG Protocol Scope 3 Standard, fully aligned with ESRS E1 requirements of the EU Corporate Sustainability Reporting Directive.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>🐦 <strong>Carbon Canary</strong> · Climathon 2026 · Built for the DE/PL industrial corridor</div>
+  <div>EU JRC · IPCC AR6 · GHG Protocol · CSRD ESRS E1</div>
+</footer>
+
+<!-- EXPORT BAR -->
+<div id="export-bar" role="toolbar" aria-label="Export options">
+  <div class="export-bar-inner">
+    <div>
+      <div class="export-bar-title">Your report is ready</div>
+      <div class="export-bar-sub">Professional Scope 3 report · GHG Protocol · CSRD ESRS E1</div>
+    </div>
+    <div class="export-bar-actions">
+      <button class="btn btn-primary" id="pdfBtn2" type="button">
+        <span class="export-btn-icon">↓</span>
+        <span class="export-btn-text"><strong>PDF Report</strong><small>Multi-page · Branded · Print-ready</small></span>
+      </button>
+      <button class="btn btn-ghost" id="wordBtn2" type="button">
+        <span class="export-btn-icon">↓</span>
+        <span class="export-btn-text"><strong>Word Document</strong><small>Editable · Full narrative</small></span>
+      </button>
+      <button class="btn btn-ghost btn-sm" id="resetBtn2" type="button">↩ New Analysis</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+// ─── CONSTANTS ───────────────────────────────────────────────────────────────
+const CAT_DEFS = [
+  {id:1,name:'Purchased Goods & Services',icon:'📦',desc:'Direct materials and components purchased from suppliers'},
+  {id:2,name:'Capital Goods',icon:'🏭',desc:'Equipment, machinery, and infrastructure used in operations'},
+  {id:3,name:'Fuel & Energy-Related',icon:'⚡',desc:'Upstream emissions from energy production and fuel extraction'},
+  {id:4,name:'Upstream Transport & Distribution',icon:'🚛',desc:'Freight transport of purchased goods to your facility'},
+  {id:5,name:'Waste in Operations',icon:'♻️',desc:'Waste generated during production and disposal emissions'},
+  {id:6,name:'Business Travel',icon:'✈️',desc:'Employee travel for business purposes'},
+  {id:7,name:'Employee Commuting',icon:'🚶',desc:'Emissions from employee travel between home and work'},
+  {id:8,name:'Upstream Leased Assets',icon:'🏢',desc:'Emissions from assets leased by the reporting company'}
+];
+
+// EU SME benchmark (manufacturing sector, radar index 0-100)
+const EU_AVG_IDX = [45, 15, 32, 38, 18, 12, 10, 8];
+const INDUSTRY_IDX = [60, 20, 40, 45, 25, 15, 13, 11];
+
+// ─── DEMO DATA ────────────────────────────────────────────────────────────────
+const DATA = [
+  {
+    meta:{supplier:'Stahlwerk Brandenburg GmbH',inv:'RE-4471',date:'12 Jun 2026',lang:'de',filename:'Stahlwerk_Brandenburg_Rechnung_4471.pdf'},
+    totalCO2e:27.9,
+    confidence:8.4,
+    euAvgDelta:+34,
+    equivalents:['≈ 6.1 cars driven for a year','≈ 1,380 trees needed to offset','≈ 113 flights Berlin → Warsaw'],
+    // per-category: radarIdx, actual t CO2e, confidence, gapPct, lineItemIds
+    categories:[
+      {id:1,radarIdx:85,value:20.3,unit:'t CO₂e',conf:'ok',gapPct:+89,lineItemIds:[0,2,3]},
+      {id:2,radarIdx:0, value:0,   unit:'t CO₂e',conf:'mi',gapPct:null,lineItemIds:[]},
+      {id:3,radarIdx:38,value:1.8, unit:'t CO₂e',conf:'un',gapPct:+19,lineItemIds:[4]},
+      {id:4,radarIdx:68,value:4.9, unit:'t CO₂e',conf:'ok',gapPct:+79,lineItemIds:[1]},
+      {id:5,radarIdx:22,value:0.9, unit:'t CO₂e',conf:'un',gapPct:+22,lineItemIds:[5]},
+      {id:6,radarIdx:0, value:0,   unit:'t CO₂e',conf:'mi',gapPct:null,lineItemIds:[]},
+      {id:7,radarIdx:0, value:0,   unit:'t CO₂e',conf:'mi',gapPct:null,lineItemIds:[]},
+      {id:8,radarIdx:0, value:0,   unit:'t CO₂e',conf:'mi',gapPct:null,lineItemIds:[]}
+    ],
+    lineItems:[
+      {id:0,field:'Steel coils (S355)',val:'18.4 t',co2:16.8,conf:'ok',source:'EU JRC EPLCA · Steel hot-rolled 2023'},
+      {id:1,field:'Road freight · 420 km (18 t HGV)',val:'420 km',co2:4.9,conf:'ok',source:'EU JRC EPLCA · Road freight EURO VI 2022'},
+      {id:2,field:'Timber pallets (EUR)',val:'24 pcs',co2:1.8,conf:'ok',source:'EU JRC EPLCA · Softwood lumber 2021'},
+      {id:3,field:'LDPE stretch film',val:'48 kg',co2:1.7,conf:'ok',source:'EU JRC EPLCA · LDPE packaging 2023'},
+      {id:4,field:'Electricity (grid mix DE)',val:'4,200 kWh',co2:1.8,conf:'un',source:'UBA Germany Grid Mix 2023 · estimated'},
+      {id:5,field:'Production waste (landfill)',val:'380 kg',co2:0.9,conf:'un',source:'IPCC AR6 · Municipal solid waste 2022'}
+    ],
+    recommendations:[
+      {priority:'CRITICAL',icon:'🔴',title:'Switch to low-carbon steel suppliers',desc:'Purchased steel accounts for 73% of your total. EU-certified green steel (< 1.2 t CO₂/t) would save an estimated 8.4 t CO₂e on this order alone.',saving:'-8.4 t CO₂e',action:'learn'},
+      {priority:'HIGH',icon:'🟠',title:'Optimize freight route (rail vs road)',desc:'Road freight at 420 km contributes 17.5% of total. Switching to rail (Berlin–Warsaw corridor) reduces transport emissions by up to 70%.',saving:'-3.4 t CO₂e',action:'learn'},
+      {priority:'HIGH',icon:'🟠',title:'Request Capital Goods data from supplier',desc:'Category 2 (Capital Goods) is missing entirely. Upstream machinery emissions could represent 15–20% of unreported Scope 3.',saving:'Up to +4.2 t discovered',action:'email'},
+      {priority:'MEDIUM',icon:'🔵',title:'Source renewable electricity at processing facility',desc:'Switching to a certified renewable energy tariff eliminates the 1.8 t CO₂e from the DE grid mix entirely.',saving:'-1.8 t CO₂e',action:'learn'},
+      {priority:'LOW',icon:'⚪',title:'Implement waste reduction & diversion programme',desc:'Current landfill waste contributes 0.9 t CO₂e. Diverting 80% to recycling reduces this by ~0.6 t CO₂e.',saving:'-0.6 t CO₂e',action:'learn'}
+    ],
+    emails:{
+      en:{to:'einkauf@stahlwerk-bb.de',subj:'Carbon data gap request – Invoice RE-4471',body:`Dear Stahlwerk Brandenburg team,
+
+We are preparing our annual Scope 3 carbon report under CSRD (ESRS E1) and need your support with two data gaps identified in invoice RE-4471 dated 12 June 2026.
+
+Missing data points:
+1. Capital Goods: Emission data for manufacturing equipment and machinery used in the production of our order (steel coils, 18.4 t)
+2. Electricity source: Specific renewable/non-renewable energy mix at your Brandenburg facility
+
+These details help us accurately report Scope 3 Category 2 and 3 emissions. We can share a simple one-page template if preferred.
+
+Thank you for your continued partnership.
+
+Best regards,
+[Your name]`},
+      de:{to:'einkauf@stahlwerk-bb.de',subj:'Anfrage fehlender CO₂-Daten – Rechnung RE-4471',body:`Sehr geehrtes Team von Stahlwerk Brandenburg,
+
+Im Rahmen unserer jährlichen Scope-3-Berichterstattung gemäß CSRD (ESRS E1) benötigen wir Ihre Unterstützung bei zwei Datenlücken aus der Rechnung RE-4471 vom 12. Juni 2026.
+
+Fehlende Angaben:
+1. Anlagevermögen: Emissionsdaten für Fertigungsanlagen und Maschinen, die bei der Herstellung unserer Bestellung (Stahlcoils, 18,4 t) eingesetzt wurden
+2. Stromquelle: Spezifischer Erneuerbare-/Nicht-Erneuerbare-Energiemix in Ihrem Werk in Brandenburg
+
+Diese Angaben sind notwendig, um Scope-3-Kategorien 2 und 3 korrekt zu melden. Wir können Ihnen gerne eine einseitige Vorlage zur Verfügung stellen.
+
+Vielen Dank für Ihre Zusammenarbeit.
+
+Mit freundlichen Grüßen,
+[Ihr Name]`},
+      pl:{to:'einkauf@stahlwerk-bb.de',subj:'Prośba o brakujące dane CO₂ – Faktura RE-4471',body:`Szanowni Państwo z Stahlwerk Brandenburg,
+
+W ramach naszego rocznego raportowania emisji zakresu 3 zgodnie z CSRD (ESRS E1) potrzebujemy Państwa pomocy w uzupełnieniu dwóch brakujących danych z faktury RE-4471 z dnia 12 czerwca 2026 r.
+
+Brakujące dane:
+1. Dobra kapitałowe: dane dotyczące emisji z maszyn i urządzeń produkcyjnych użytych do realizacji naszego zamówienia (kręgi stalowe, 18,4 t)
+2. Źródło energii elektrycznej: konkretny mix energetyczny (odnawialny/nieodnawialny) w zakładzie w Brandenburgii
+
+Dane te są niezbędne do prawidłowego raportowania kategorii 2 i 3 zakresu 3. Możemy udostępnić prosty szablon jednostronicowy, jeśli jest to preferowane.
+
+Dziękujemy za współpracę.
+
+Z poważaniem,
+[Państwa imię i nazwisko]`}
+    }
+  },
+  {
+    meta:{supplier:'Drewno Śląsk Sp. z o.o.',inv:'FS-2024/88',date:'15 Jun 2026',lang:'pl',filename:'Drewno_Slask_Faktura_2024_88.pdf'},
+    totalCO2e:14.2,
+    confidence:9.1,
+    euAvgDelta:-8,
+    equivalents:['≈ 3.1 cars driven for a year','≈ 710 trees needed to offset','≈ 58 flights Warsaw → Berlin'],
+    categories:[
+      {id:1,radarIdx:52,value:8.6, unit:'t CO₂e',conf:'ok',gapPct:+16,lineItemIds:[0,1]},
+      {id:2,radarIdx:0, value:0,   unit:'t CO₂e',conf:'mi',gapPct:null,lineItemIds:[]},
+      {id:3,radarIdx:28,value:1.1, unit:'t CO₂e',conf:'ok',gapPct:-13,lineItemIds:[3]},
+      {id:4,radarIdx:45,value:2.8, unit:'t CO₂e',conf:'ok',gapPct:+18,lineItemIds:[2]},
+      {id:5,radarIdx:15,value:0.4, unit:'t CO₂e',conf:'ok',gapPct:-17,lineItemIds:[4]},
+      {id:6,radarIdx:0, value:0,   unit:'t CO₂e',conf:'mi',gapPct:null,lineItemIds:[]},
+      {id:7,radarIdx:8, value:0.3, unit:'t CO₂e',conf:'un',gapPct:-20,lineItemIds:[]},
+      {id:8,radarIdx:18,value:1.0, unit:'t CO₂e',conf:'un',gapPct:+125,lineItemIds:[5]}
+    ],
+    lineItems:[
+      {id:0,field:'Construction timber C24 (sawn)',val:'12.8 m³',co2:5.1,conf:'ok',source:'EU JRC EPLCA · Sawn softwood 2022'},
+      {id:1,field:'OSB boards (18 mm)',val:'85 sheets',co2:3.5,conf:'ok',source:'EU JRC EPLCA · OSB panel board 2021'},
+      {id:2,field:'Road freight · 280 km (12 t HGV)',val:'280 km',co2:2.8,conf:'ok',source:'EU JRC EPLCA · Road freight EURO VI 2022'},
+      {id:3,field:'Electricity (grid mix PL)',val:'2,800 kWh',co2:1.1,conf:'ok',source:'URE Poland Grid Mix 2023 (0.394 kg CO₂/kWh)'},
+      {id:4,field:'Sawmill waste (recycled)',val:'640 kg',co2:0.4,conf:'ok',source:'IPCC AR6 · Wood waste recycling 2022'},
+      {id:5,field:'Leased forklift (diesel)',val:'Est. 280 hr',co2:1.0,conf:'un',source:'DEFRA 2023 · Diesel forklift activity · estimated'}
+    ],
+    recommendations:[
+      {priority:'HIGH',icon:'🟠',title:'Request Capital Goods data from supplier',desc:'Category 2 (Capital Goods) has no data. Sawmill machinery and equipment can represent 10–15% of unreported Scope 3 for timber operations.',saving:'Up to +2.1 t discovered',action:'email'},
+      {priority:'HIGH',icon:'🟠',title:'Replace leased diesel forklift with electric',desc:'The diesel forklift (Cat 8) is 125% above EU average. An electric replacement on PL grid would reduce this category by ~70%.',saving:'-0.7 t CO₂e',action:'learn'},
+      {priority:'MEDIUM',icon:'🔵',title:'Optimize transport routing',desc:'Upstream transport is 18% above EU SME average. Consolidating shipments or using rail for longer hauls could reduce Cat 4 by 20–30%.',saving:'-0.6 t CO₂e',action:'learn'},
+      {priority:'LOW',icon:'⚪',title:'Switch to renewable energy tariff (PL grid)',desc:'PL grid has high carbon intensity (0.394 kg CO₂/kWh). Switching to a certified renewable energy contract eliminates Cat 3 emissions.',saving:'-1.1 t CO₂e',action:'learn'}
+    ],
+    emails:{
+      en:{to:'biuro@drewno-slask.pl',subj:'Carbon data gap request – Invoice FS-2024/88',body:`Dear Drewno Śląsk team,
+
+We are preparing our annual Scope 3 carbon report under CSRD (ESRS E1) and need your support with a data gap identified in invoice FS-2024/88 dated 15 June 2026.
+
+Missing data point:
+1. Capital Goods: Emission data for sawmill machinery and processing equipment used to produce our timber order (12.8 m³ C24 + 85 OSB sheets)
+
+This detail helps us accurately report Scope 3 Category 2 emissions. We can share a simple one-page template.
+
+Thank you for your partnership.
+
+Best regards,
+[Your name]`},
+      de:{to:'biuro@drewno-slask.pl',subj:'Anfrage fehlender CO₂-Daten – Rechnung FS-2024/88',body:`Sehr geehrtes Team von Drewno Śląsk,
+
+Im Rahmen unserer Scope-3-Berichterstattung gemäß CSRD benötigen wir Ihre Unterstützung bei einer Datenlücke aus Rechnung FS-2024/88.
+
+Fehlende Angaben:
+1. Anlagevermögen: Emissionsdaten für Sägewerksmaschinen und Verarbeitungsanlagen
+
+Vielen Dank.
+
+Mit freundlichen Grüßen,
+[Ihr Name]`},
+      pl:{to:'biuro@drewno-slask.pl',subj:'Prośba o dane CO₂ – Faktura FS-2024/88',body:`Szanowni Państwo z Drewno Śląsk,
+
+Przygotowujemy roczny raport emisji zakresu 3 zgodnie z CSRD i potrzebujemy uzupełnienia luki danych z faktury FS-2024/88 z 15 czerwca 2026 r.
+
+Brakujące dane:
+1. Dobra kapitałowe: dane emisji dla maszyn i urządzeń tartaku
+
+Dziękujemy za współpracę.
+
+Z poważaniem,
+[Państwa imię i nazwisko]`}
+    }
+  }
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let SEL = -1;       // selected demo index (-1 = real file)
+let LANG = 'en';    // email language
+let radarChart = null;
+let currentData = null;
+
+// ─── UTILITIES ───────────────────────────────────────────────────────────────
+function detectLanguage(filename, text) {
+  const s = (filename + ' ' + text).toLowerCase();
+  const de = /rechnung|lieferschein|mwst|bestellung|ware|stück|artikel|lieferung|faktur/;
+  const pl = /faktura|dostawa|zamówienie|sztuk|towar|vat|poz|netto|brutto|dostawca/;
+  if (de.test(s) && pl.test(s)) return s.indexOf('faktura') > s.indexOf('rechnung') ? 'pl' : 'de';
+  if (de.test(s)) return 'de';
+  if (pl.test(s)) return 'pl';
+  return 'un';
+}
+
+function formatSize(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+
+function langLabel(code) {
+  return {de:'🇩🇪 German',pl:'🇵🇱 Polish',un:'Unknown language'}[code] || 'Unknown';
+}
+
+function langBadgeClass(code) {
+  return {de:'lang-de',pl:'lang-pl',un:'lang-un'}[code] || 'lang-un';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function countUp(el, to, duration) {
+  const start = performance.now();
+  const from = 0;
+  return new Promise(resolve => {
+    function frame(now) {
+      const p = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      const val = from + (to - from) * ease;
+      el.textContent = val.toFixed(1);
+      if (p < 1) requestAnimationFrame(frame);
+      else { el.textContent = to.toFixed(1); resolve(); }
+    }
+    requestAnimationFrame(frame);
+  });
+}
+
+// ─── FILE UPLOAD ─────────────────────────────────────────────────────────────
+function handleFile(file) {
+  if (!file) return;
+  SEL = -1;
+  document.querySelectorAll('.chip').forEach(c => { c.classList.remove('active'); c.setAttribute('aria-pressed','false'); });
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = (typeof e.target.result === 'string') ? e.target.result : '';
+    const lang = detectLanguage(file.name, text);
+    showFileInfo(file.name, formatSize(file.size), lang);
+    currentData = SEL >= 0 ? DATA[SEL] : buildFakeResult(file, lang);
+    document.getElementById('analyzeBtn').disabled = false;
+  };
+  if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
+    reader.readAsDataURL(file);
+  } else {
+    reader.readAsText(file);
+  }
+}
+
+function showFileInfo(name, size, lang) {
+  document.getElementById('fileName').textContent = name;
+  document.getElementById('fileMeta').textContent = size;
+  const badge = document.getElementById('langBadge');
+  badge.textContent = langLabel(lang);
+  badge.className = 'lang-badge ' + langBadgeClass(lang);
+  document.getElementById('fileInfo').classList.add('show');
+}
+
+function buildFakeResult(file, lang) {
+  // For real file uploads, use demo data with detected language metadata
+  const base = JSON.parse(JSON.stringify(DATA[0]));
+  base.meta.filename = file.name;
+  base.meta.lang = lang;
+  base.meta.supplier = file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
+  base.meta.inv = 'UPLOAD-' + Date.now().toString(36).toUpperCase();
+  base.meta.date = new Date().toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
+  return base;
+}
+
+// ─── DEMO CHIP TRIGGER ────────────────────────────────────────────────────────
+function triggerDemo(idx) {
+  SEL = idx;
+  document.querySelectorAll('.chip').forEach((c,i) => {
+    const active = i === idx;
+    c.classList.toggle('active', active);
+    c.setAttribute('aria-pressed', String(active));
+  });
+  const d = DATA[idx];
+  showFileInfo(d.meta.filename, '—', d.meta.lang);
+  currentData = d;
+  document.getElementById('analyzeBtn').disabled = false;
+  // Scroll to upload card
+  document.querySelector('.upload-card').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+// ─── ANALYSIS FLOW ────────────────────────────────────────────────────────────
+const LOG_LINES = [
+  ['Detected language: {lang}','Reading document structure…','Parsing header fields…'],
+  ['Found: quantities, materials, transport data','Extracting CO₂-relevant line items…','Identified 6 emission-relevant fields'],
+  ['Matching: Steel hot-rolled → EU JRC EPLCA 2023','Matching: Road freight EURO VI → 2022','Matching: Grid mix → UBA/URE national factors'],
+  ['Scoring field confidence per EU source quality…','Confirmed: 4 fields · Uncertain: 2 · Missing: 4','Weighted confidence: {conf}/10'],
+  ['Building 8-category breakdown…','Generating recommendations…','Report ready ✓']
+];
+
+async function runAnalysis() {
+  if (!currentData && SEL < 0) return;
+  const d = currentData || DATA[SEL];
+
+  document.getElementById('analyzeBtn').disabled = true;
+  const overlay = document.getElementById('analyzing');
+  overlay.style.display = 'flex';
+  document.getElementById('anDoc').textContent = d.meta.filename;
+
+  const steps = document.querySelectorAll('.step');
+  const fill = document.getElementById('an-fill');
+  const pctEl = document.getElementById('anPct');
+  const logEl = document.getElementById('anLog');
+  const totalR = 283; // 2π×45
+
+  for (let i = 0; i < steps.length; i++) {
+    steps[i].classList.add('active');
+    const pct = Math.round((i / steps.length) * 100);
+    fill.setAttribute('stroke-dashoffset', totalR * (1 - i / steps.length));
+    pctEl.textContent = pct + '%';
+
+    const lines = LOG_LINES[i];
+    for (let j = 0; j < lines.length; j++) {
+      const txt = lines[j]
+        .replace('{lang}', d.meta.lang === 'de' ? 'German 🇩🇪' : d.meta.lang === 'pl' ? 'Polish 🇵🇱' : 'Unknown')
+        .replace('{conf}', d.confidence.toFixed(1));
+      logEl.textContent = '› ' + txt;
+      await sleep(j === 0 ? 200 : 380);
+    }
+    await sleep(300);
+    steps[i].classList.remove('active');
+    steps[i].classList.add('done');
+    steps[i].querySelector('.step-dot').textContent = '✓';
+  }
+
+  fill.setAttribute('stroke-dashoffset', '0');
+  pctEl.textContent = '100%';
+  await sleep(400);
+
+  overlay.style.display = 'none';
+  renderResults(d);
+}
+
+// ─── RENDER RESULTS ───────────────────────────────────────────────────────────
+function renderResults(d) {
+  document.getElementById('hero').classList.add('hidden');
+  document.querySelector('.how-section').classList.add('hidden');
+  document.querySelectorAll('#methodology, footer').forEach(el => el.classList.add('hidden'));
+
+  const results = document.getElementById('results');
+  results.classList.remove('hidden');
+  document.getElementById('nav-results-link').classList.remove('hidden');
+  document.getElementById('export-bar').classList.add('show');
+
+  document.getElementById('resTitle').textContent = d.meta.supplier + ' · ' + d.meta.inv;
+  document.getElementById('resSub').textContent = d.meta.date + ' · Lang: ' + langLabel(d.meta.lang) + ' · Scope 3';
+
+  // Score
+  countUp(document.getElementById('scoreBig'), d.totalCO2e, 1200);
+
+  // Equivalents
+  const equivEl = document.getElementById('scoreEquivs');
+  equivEl.innerHTML = d.equivalents.map(e => `<div class="equiv-pill">${e}</div>`).join('');
+
+  // EU compare
+  const cmpEl = document.getElementById('euCompare');
+  const delta = d.euAvgDelta;
+  cmpEl.className = 'eu-compare' + (delta < 0 ? ' below' : '');
+  cmpEl.textContent = (delta >= 0 ? `↑ ${delta}% above` : `↓ ${Math.abs(delta)}% below`) + ' EU SME average';
+
+  // Confidence ring
+  animateConfRing(d.confidence);
+
+  // Radar
+  setTimeout(() => drawRadar(d.categories), 100);
+
+  // Categories
+  renderCategories(d.categories);
+
+  // Recommendations
+  renderRecommendations(d.recommendations);
+
+  // Line items
+  renderLineItems(d.lineItems);
+
+  // Email
+  LANG = 'en';
+  renderEmail(d.emails);
+  updateEmailTabs();
+
+  // Reveal animations
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+  }, {threshold:0.1, rootMargin:'0px 0px -30px 0px'});
+  document.querySelectorAll('#results .reveal').forEach(el => observer.observe(el));
+
+  results.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ─── CONFIDENCE RING ──────────────────────────────────────────────────────────
+function animateConfRing(score) {
+  const ring = document.getElementById('confRing');
+  const numEl = document.getElementById('confNum');
+  const circumference = 427.26; // 2π×68
+  const color = score >= 8 ? '#00e5cc' : score >= 6 ? '#ff9f00' : '#ff4d6d';
+  ring.setAttribute('stroke', color);
+
+  let start = null;
+  const target = circumference * (1 - score / 10);
+  function frame(ts) {
+    if (!start) start = ts;
+    const p = Math.min((ts - start) / 1400, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    const offset = circumference - (circumference - target) * ease;
+    ring.setAttribute('stroke-dashoffset', offset);
+    numEl.textContent = (score * ease).toFixed(1);
+    if (p < 1) requestAnimationFrame(frame);
+    else numEl.textContent = score.toFixed(1);
+  }
+  requestAnimationFrame(frame);
+}
+
+// ─── RADAR CHART ─────────────────────────────────────────────────────────────
+function drawRadar(categories) {
+  const ctx = document.getElementById('radarChart').getContext('2d');
+  if (radarChart) radarChart.destroy();
+
+  const labels = CAT_DEFS.map(c => c.name.split(' & ')[0].split(' (')[0]);
+  const yours = categories.map(c => c.radarIdx);
+
+  radarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Your Score',
+          data: yours,
+          backgroundColor: 'rgba(0,229,204,0.15)',
+          borderColor: '#00e5cc',
+          borderWidth: 2,
+          pointBackgroundColor: '#00e5cc',
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: 'EU SME Average',
+          data: EU_AVG_IDX,
+          backgroundColor: 'rgba(240,244,248,0.04)',
+          borderColor: 'rgba(240,244,248,0.5)',
+          borderWidth: 1.5,
+          borderDash: [5,4],
+          pointBackgroundColor: 'rgba(240,244,248,0.5)',
+          pointRadius: 3
+        },
+        {
+          label: 'Industry Benchmark',
+          data: INDUSTRY_IDX,
+          backgroundColor: 'rgba(255,159,0,0.05)',
+          borderColor: 'rgba(255,159,0,0.5)',
+          borderWidth: 1.5,
+          borderDash: [3,3],
+          pointBackgroundColor: 'rgba(255,159,0,0.5)',
+          pointRadius: 3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: { display: false, stepSize: 25 },
+          grid: { color: 'rgba(255,255,255,0.06)' },
+          angleLines: { color: 'rgba(255,255,255,0.06)' },
+          pointLabels: { color: '#8899aa', font: { family: 'Inter', size: 11, weight: '600' } }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.raw} / 100`
+          }
+        }
+      },
+      animation: { duration: 1000, easing: 'easeInOutQuart' }
+    }
+  });
+}
+
+// ─── CATEGORIES ───────────────────────────────────────────────────────────────
+function renderCategories(cats) {
+  const list = document.getElementById('catList');
+  const missing = cats.filter(c => c.conf === 'mi').length;
+  document.getElementById('catMissing').textContent = missing ? `${missing} MISSING` : 'ALL PRESENT';
+
+  list.innerHTML = cats.map((cat, idx) => {
+    const def = CAT_DEFS[idx];
+    const maxIdx = 100;
+    const fillPct = cat.radarIdx;
+    const euPct = EU_AVG_IDX[idx];
+    const barColor = cat.conf === 'mi' ? 'rgba(255,255,255,.15)' :
+      cat.gapPct > 30 ? 'var(--danger)' :
+      cat.gapPct > 10 ? 'var(--amber)' : 'var(--primary)';
+    const confBadge = {ok:'badge-ok',un:'badge-un',mi:'badge-mi'}[cat.conf];
+    const confText = {ok:'CONFIRMED',un:'UNCERTAIN',mi:'MISSING'}[cat.conf];
+    const gapHtml = cat.gapPct !== null
+      ? `<span class="cat-gap ${cat.gapPct > 0 ? 'gap-up' : 'gap-down'}">${cat.gapPct > 0 ? '↑' : '↓'} ${Math.abs(cat.gapPct)}% vs EU avg</span>`
+      : `<span class="cat-gap gap-ok">— No data</span>`;
+
+    const laggingBadge = cat.gapPct > 30 ? '<span class="badge badge-lagging">⚠ LAGGING</span>' : '';
+
+    return `<div class="cat-row" role="listitem" data-idx="${idx}" tabindex="0" aria-expanded="false">
+      <div class="cat-row-top">
+        <div class="cat-icon" aria-hidden="true">${def.icon}</div>
+        <div>
+          <div class="cat-name">Cat ${cat.id} · ${def.name}</div>
+        </div>
+        <div class="cat-num">${cat.conf !== 'mi' ? cat.value.toFixed(1) + ' t' : '—'}</div>
+        <div>${gapHtml}</div>
+      </div>
+      <div class="cat-bar-wrap">
+        <div class="bar-track" title="Your score: ${fillPct}/100 · EU avg: ${euPct}/100">
+          <div class="bar-fill" style="width:0%;background:${barColor}" data-w="${fillPct}%"></div>
+          <div class="bar-eu-marker" style="left:${euPct}%" title="EU average"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="badge ${confBadge}">${confText}</span>
+          ${laggingBadge}
+        </div>
+      </div>
+      <div class="cat-expand">${def.desc}</div>
+    </div>`;
+  }).join('');
+
+  // Animate bars after short delay
+  setTimeout(() => {
+    list.querySelectorAll('.bar-fill').forEach(bar => {
+      bar.style.transition = 'width 1.2s cubic-bezier(.25,.46,.45,.94)';
+      bar.style.width = bar.dataset.w;
+    });
+  }, 100);
+
+  // Expand on click
+  list.querySelectorAll('.cat-row').forEach(row => {
+    function toggle() {
+      const open = row.classList.toggle('open');
+      row.setAttribute('aria-expanded', String(open));
+    }
+    row.addEventListener('click', toggle);
+    row.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+  });
+}
+
+// ─── RECOMMENDATIONS ──────────────────────────────────────────────────────────
+function renderRecommendations(recs) {
+  document.getElementById('recCount').textContent = recs.length + ' ACTIONS';
+  const grid = document.getElementById('recGrid');
+  grid.innerHTML = recs.map(r => `
+    <div class="rec-card p-${r.priority.toLowerCase()}">
+      <div class="rec-priority">${r.priority}</div>
+      <div class="rec-icon" aria-hidden="true">${r.icon}</div>
+      <div class="rec-title">${r.title}</div>
+      <div class="rec-desc">${r.desc}</div>
+      ${r.saving ? `<div class="rec-saving">Estimated impact: ${r.saving}</div>` : ''}
+      <div class="rec-actions">
+        ${r.action === 'email' ? `<button class="btn btn-ghost btn-sm" onclick="scrollToEmail()" type="button">📧 Draft Email</button>` : ''}
+        <button class="btn btn-ghost btn-sm" type="button" onclick="alert('Full guidance available in the complete Carbon Canary platform.')">Learn More →</button>
+      </div>
+    </div>`).join('');
+}
+
+function scrollToEmail() {
+  document.getElementById('emailSection').scrollIntoView({behavior:'smooth'});
+}
+
+// ─── LINE ITEMS ───────────────────────────────────────────────────────────────
+function renderLineItems(rows) {
+  const maxCO2 = Math.max(...rows.map(r => r.co2));
+  document.getElementById('lineBody').innerHTML = rows.map(r => {
+    const confBadge = r.conf === 'ok' ? 'badge-ok' : r.conf === 'un' ? 'badge-un' : 'badge-mi';
+    const confText = r.conf === 'ok' ? '✓ Confirmed' : r.conf === 'un' ? '~ Uncertain' : '— Missing';
+    const isTop = r.co2 === maxCO2;
+    return `<tr class="${isTop ? 'row-top' : ''}">
+      <td><div class="td-field">${r.field}</div><div class="td-source">${r.source}</div></td>
+      <td>${r.val}</td>
+      <td class="td-co2">${r.co2.toFixed(1)} t</td>
+      <td><span class="badge ${confBadge}">${confText}</span></td>
+      <td style="font-size:11px;color:var(--muted)">${r.source.split('·')[0].trim()}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── EMAIL ────────────────────────────────────────────────────────────────────
+function renderEmail(emails) {
+  const e = emails[LANG];
+  document.getElementById('emailTo').textContent = 'To: ' + e.to + '  ·  Subject: ' + e.subj;
+  document.getElementById('emailBody').textContent = e.body;
+}
+
+function updateEmailTabs() {
+  document.querySelectorAll('.email-tab').forEach(t => {
+    const sel = t.dataset.l === LANG;
+    t.classList.toggle('active', sel);
+    t.setAttribute('aria-selected', String(sel));
+    t.tabIndex = sel ? 0 : -1;
+  });
+}
+
+// ─── REPORT HELPERS ───────────────────────────────────────────────────────────
+function reportDate(){return new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});}
+function topCat(d){const t=d.categories.filter(c=>c.value>0).sort((a,b)=>b.value-a.value)[0];return t?CAT_DEFS[t.id-1].name:'Purchased Goods & Services';}
+function missingCats(d){return d.categories.filter(c=>c.conf==='mi').map(c=>CAT_DEFS[c.id-1]?.name).filter(Boolean);}
+function euSentence(d){return d.euAvgDelta>=0?`This total is ${d.euAvgDelta}% above the EU SME average for this sector, indicating material Scope 3 exposure and significant opportunity for reduction.`:`This total is ${Math.abs(d.euAvgDelta)}% below the EU SME average for this sector, demonstrating above-average supply-chain carbon performance relative to industry peers.`;}
+
+// ─── PDF EXPORT ───────────────────────────────────────────────────────────────
+function exportPDF() {
+  if (!currentData) return;
+  const d = currentData;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
+  const M = 20;
+  const TEXT_W = W - M * 2;
+  // Old design palette
+  const TEAL = [0,229,204];
+  const LIME = [180,255,75];
+  const INK = [240,244,248];
+  const MUTED = [136,153,170];
+  const BG = [7,13,31];
+  const BG2 = [15,25,45];
+  const dateStr = reportDate();
+  let pageNum = 0;
+
+  function addPageHeader(title) {
+    pageNum++;
+    doc.setFillColor(...BG); doc.rect(0,0,W,H,'F');
+    doc.setFillColor(...TEAL); doc.rect(0,0,W,1.5,'F');
+    doc.setFillColor(12,20,42); doc.rect(0,1.5,W,13,'F');
+    doc.setFillColor(25,38,65); doc.rect(0,14.5,W,.4,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...TEAL);
+    doc.text('CARBON CANARY', M, 9);
+    doc.setFont('helvetica','normal'); doc.setTextColor(...MUTED);
+    doc.text('Scope 3 GHG Emissions Report', M+34, 9);
+    doc.text(d.meta.supplier, W-M, 9, {align:'right'});
+    if (title) {
+      doc.setFont('helvetica','bold'); doc.setFontSize(11.5); doc.setTextColor(...TEAL);
+      doc.text(title, M, 26);
+      doc.setFillColor(...TEAL); doc.rect(M, 28, 28, .6, 'F');
+    }
+  }
+  function addPageFooter() {
+    doc.setFillColor(12,20,42); doc.rect(0,H-11,W,11,'F');
+    doc.setFillColor(25,38,65); doc.rect(0,H-11,W,.4,'F');
+    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...MUTED);
+    doc.text('EU JRC EPLCA · IPCC AR6 GWP100 · GHG Protocol Scope 3 · CSRD ESRS E1', M, H-5.5);
+    doc.text(`Page ${pageNum}  ·  ${dateStr}`, W-M, H-5.5, {align:'right'});
+  }
+  function sectionH2(text, y) {
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...TEAL);
+    doc.text(text, M, y);
+    doc.setFillColor(...TEAL); doc.rect(M, y+1.5, TEXT_W, .4, 'F');
+    return y + 8;
+  }
+  function para(text, y, size=9, color=INK, weight='normal') {
+    doc.setFont('helvetica', weight); doc.setFontSize(size); doc.setTextColor(...color);
+    const lines = doc.splitTextToSize(text, TEXT_W);
+    doc.text(lines, M, y);
+    return y + lines.length * size * .44 + 2;
+  }
+  function kvRow(label, value, y) {
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED);
+    doc.text(label, M, y);
+    doc.setFont('helvetica','bold'); doc.setTextColor(...INK);
+    doc.text(value, M+54, y);
+    return y + 6;
+  }
+
+  // PAGE 1: COVER
+  doc.setFillColor(...BG); doc.rect(0,0,W,H,'F');
+  // top teal stripe
+  doc.setFillColor(...TEAL); doc.rect(0,0,W,2,'F');
+  // brand
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...TEAL);
+  doc.text('CARBON CANARY', M, 22);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
+  doc.text('Scope 3 GHG Intelligence Platform', M, 29);
+  // divider
+  doc.setFillColor(25,38,65); doc.rect(M,34,TEXT_W,.5,'F');
+  // report title
+  doc.setFont('helvetica','bold'); doc.setFontSize(24); doc.setTextColor(...INK);
+  doc.text('Scope 3 Greenhouse Gas', M, 50);
+  doc.text('Emissions Report', M, 62);
+  // large score block
+  doc.setFillColor(12,20,42); doc.roundedRect(M,70,TEXT_W,46,3,3,'F');
+  doc.setFillColor(...TEAL); doc.rect(M,70,3,46,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(38); doc.setTextColor(...LIME);
+  doc.text(`${d.totalCO2e}`, M+10, 100);
+  doc.setFontSize(13); doc.setTextColor(...MUTED);
+  doc.text('tonnes CO₂ equivalent', M+10, 110);
+  doc.setFontSize(8.5); doc.setTextColor(...TEAL);
+  doc.text(`Confidence: ${d.confidence}/10  ·  ${d.euAvgDelta>=0?'+':''}${d.euAvgDelta}% vs EU SME average`, M+10, 118);
+  // supplier block
+  doc.setFillColor(12,20,42); doc.roundedRect(M,124,TEXT_W,40,3,3,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...MUTED);
+  doc.text('PREPARED FOR', M+8, 133);
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(...INK);
+  doc.text(d.meta.supplier, M+8, 142);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED);
+  doc.text(`Invoice: ${d.meta.inv}  ·  Date: ${d.meta.date}  ·  Language: ${langLabel(d.meta.lang)}`, M+8, 150);
+  doc.text(`Report generated: ${dateStr}`, M+8, 157);
+  // equivalents
+  doc.setFont('helvetica','italic'); doc.setFontSize(8.5); doc.setTextColor(80,100,120);
+  d.equivalents.forEach((e,i) => doc.text(e, M, 175+i*7));
+  // standards strip
+  doc.setFillColor(12,20,42); doc.rect(0,H-30,W,30,'F');
+  doc.setFillColor(...TEAL); doc.rect(0,H-30,W,.6,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...TEAL);
+  doc.text('STANDARDS & METHODOLOGY', M, H-22);
+  doc.setFont('helvetica','normal'); doc.setTextColor(...MUTED);
+  doc.text('EU JRC EPLCA Emission Factor Database  ·  IPCC Sixth Assessment Report (AR6) GWP100  ·  GHG Protocol Scope 3 Standard  ·  CSRD ESRS E1', M, H-16);
+  doc.setFontSize(7); doc.setTextColor(60,80,100);
+  doc.text(`CONFIDENTIAL — Generated by Carbon Canary · ${dateStr}`, M, H-9);
+
+  // PAGE 2: EXECUTIVE SUMMARY
+  doc.addPage(); addPageHeader('Executive Summary'); addPageFooter();
+  let y = 36;
+  y = para(`This report presents a comprehensive analysis of Scope 3 greenhouse gas (GHG) emissions associated with procurement activities recorded in invoice ${d.meta.inv} issued by ${d.meta.supplier}. The analysis was conducted in accordance with the GHG Protocol Corporate Value Chain (Scope 3) Accounting and Reporting Standard, and is aligned with the requirements of the EU Corporate Sustainability Reporting Directive (CSRD), specifically ESRS E1 — Climate Change.`, y, 9, INK); y+=3;
+  y = para(`Carbon Canary processed the ${langLabel(d.meta.lang)} invoice using EU JRC EPLCA emission factors and IPCC AR6 Global Warming Potential (GWP100) values. Each line item was individually assessed, matched to the closest applicable emission factor, and assigned a confidence rating reflecting data completeness and source quality.`, y, 9, INK); y+=5;
+  y = sectionH2('Key Findings', y);
+  const kpis=[['Total Scope 3 Emissions',`${d.totalCO2e} t CO₂e`],['Data Confidence Score',`${d.confidence} / 10`],['vs EU SME Sector Average',`${d.euAvgDelta>=0?'+':''}${d.euAvgDelta}%`],['Primary Emission Source',topCat(d)],['Invoice Reference',`${d.meta.inv} · ${d.meta.date}`],['Analysis Standard','GHG Protocol Scope 3 · CSRD ESRS E1']];
+  doc.setFillColor(...BG2); doc.roundedRect(M,y,TEXT_W,kpis.length*8+6,2,2,'F');
+  doc.setFillColor(25,38,65); doc.rect(M,y,TEXT_W,.4,'F');
+  y+=5;
+  kpis.forEach(([l,v])=>{y=kvRow(l,v,y);});
+  y+=5;
+  y = para(euSentence(d)+` The primary emission source identified is ${topCat(d)}, which represents the largest individual contributor and should be prioritised in any decarbonisation strategy.`, y, 9, INK); y+=4;
+  const missing = missingCats(d);
+  if (missing.length>0) {
+    y = sectionH2('Data Gaps Identified', y);
+    y = para('The following GHG Protocol Scope 3 categories could not be quantified due to insufficient data in the submitted invoice. Supplier engagement is recommended to close these gaps:', y, 9, INK); y+=2;
+    missing.forEach(name=>{doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(...MUTED);doc.text(`·  ${name}`,M+4,y);y+=5.5;});
+  }
+  y+=3;
+  y = para(`The confidence score of ${d.confidence}/10 reflects the proportion of emission-relevant fields matched to confirmed EU JRC EPLCA sources. Fields with estimated values are flagged as "Uncertain" in the line item table on page 4.`, y, 9, MUTED);
+
+  // PAGE 3: SCOPE 3 CATEGORY ANALYSIS
+  doc.addPage(); addPageHeader('Scope 3 Category Analysis'); addPageFooter();
+  y = 36;
+  y = para('The GHG Protocol Scope 3 Standard defines 15 upstream and downstream categories. This analysis covers the 8 upstream categories relevant to procurement. Each is scored on a 0–100 index relative to the sector maximum, and compared against the EU SME sectoral benchmark.', y, 9, INK); y+=5;
+  doc.autoTable({
+    startY:y, margin:{left:M,right:M},
+    head:[['Cat.','Scope 3 Category','Emissions','Index','vs EU Avg','Data Quality']],
+    body:d.categories.map((c,i)=>[`${c.id}`,CAT_DEFS[i].name,c.value>0?`${c.value.toFixed(1)} t CO₂e`:'— (no data)',c.radarIdx>0?`${c.radarIdx}/100`:'—',c.gapPct!==null?`${c.gapPct>=0?'+':''}${c.gapPct}%`:'N/A',{ok:'Confirmed ✓',un:'Uncertain ~',mi:'Missing ✗'}[c.conf]]),
+    styles:{font:'helvetica',fontSize:8,textColor:[220,230,240],fillColor:BG,cellPadding:3.5},
+    headStyles:{fillColor:TEAL,textColor:[7,13,31],fontStyle:'bold',fontSize:8},
+    alternateRowStyles:{fillColor:BG2},
+    columnStyles:{0:{cellWidth:10,halign:'center'},2:{cellWidth:26,halign:'right'},3:{cellWidth:18,halign:'center'},4:{cellWidth:20,halign:'center'},5:{cellWidth:26}},
+    didParseCell:(data)=>{
+      if(data.section==='body'&&data.column.index===5){const v=data.cell.raw;if(v.includes('✓'))data.cell.styles.textColor=[0,200,120];else if(v.includes('~'))data.cell.styles.textColor=[220,160,40];else if(v.includes('✗'))data.cell.styles.textColor=[255,100,120];}
+      if(data.section==='body'&&data.column.index===4){const v=String(data.cell.raw);if(v.startsWith('+'))data.cell.styles.textColor=[255,100,120];else if(v.startsWith('-'))data.cell.styles.textColor=[0,200,120];}
+    }
+  });
+  y = doc.lastAutoTable.finalY+8;
+  const topEmitters = d.categories.filter(c=>c.value>0).sort((a,b)=>b.value-a.value).slice(0,2);
+  if (topEmitters.length>0) {
+    y = sectionH2('Analysis & Interpretation', y);
+    const t=topEmitters[0]; const def=CAT_DEFS[t.id-1];
+    y = para(`Category ${t.id} — ${def.name} — accounts for ${t.value.toFixed(1)} t CO₂e, representing ${((t.value/d.totalCO2e)*100).toFixed(0)}% of total identified Scope 3 emissions. ${def.desc}. This category${t.gapPct>30?' significantly exceeds the EU sector benchmark and should be prioritised for reduction.':t.gapPct>0?' is above the EU sector benchmark and warrants attention.':" is within acceptable range relative to EU sector peers."}`, y, 9, INK); y+=3;
+    if (topEmitters[1]) {
+      const t2=topEmitters[1]; const def2=CAT_DEFS[t2.id-1];
+      y = para(`Category ${t2.id} — ${def2.name} — is the second largest contributor at ${t2.value.toFixed(1)} t CO₂e (${((t2.value/d.totalCO2e)*100).toFixed(0)}% of total). This category should be included in the supplier engagement roadmap.`, y, 9, INK);
+    }
+  }
+
+  // PAGE 4: LINE ITEMS
+  doc.addPage(); addPageHeader('Extracted Line Items & Emission Factors'); addPageFooter();
+  y = 36;
+  y = para('The table below presents each emission-relevant item extracted from the invoice, the EU JRC or IPCC emission factor applied, the calculated CO₂e figure, and the confidence rating. Items rated as Uncertain use the closest available proxy factor and should be refined through direct supplier disclosure.', y, 9, INK); y+=5;
+  doc.autoTable({
+    startY:y, margin:{left:M,right:M},
+    head:[['Line Item / Material','Quantity','CO₂e','Confidence','Emission Factor Source']],
+    body:d.lineItems.map(r=>[r.field,r.val,`${r.co2.toFixed(1)} t`,{ok:'Confirmed',un:'Uncertain',mi:'Missing'}[r.conf],r.source]),
+    styles:{font:'helvetica',fontSize:7.8,textColor:[220,230,240],fillColor:BG,cellPadding:3.5},
+    headStyles:{fillColor:TEAL,textColor:[7,13,31],fontStyle:'bold',fontSize:8},
+    alternateRowStyles:{fillColor:BG2},
+    columnStyles:{0:{cellWidth:45},1:{cellWidth:22},2:{cellWidth:16,halign:'right'},3:{cellWidth:20},4:{cellWidth:TEXT_W-45-22-16-20}},
+    didParseCell:(data)=>{if(data.section==='body'&&data.column.index===3){const v=data.cell.raw;if(v==='Confirmed')data.cell.styles.textColor=[0,200,120];else if(v==='Uncertain')data.cell.styles.textColor=[220,160,40];else data.cell.styles.textColor=[255,100,120];}}
+  });
+  y = doc.lastAutoTable.finalY+8;
+  y = sectionH2('Confidence Methodology', y);
+  y = para(`Each figure is rated Confirmed (directly matched to a named EU JRC EPLCA or IPCC AR6 factor), Uncertain (matched to a proxy or estimated from activity data), or Missing (no usable data found; supplier input required). The overall confidence score of ${d.confidence}/10 is a weighted average based on the CO₂e share of each category.`, y, 8.5, MUTED);
+
+  // PAGE 5: RECOMMENDATIONS
+  doc.addPage(); addPageHeader('Recommendations & Decarbonisation Roadmap'); addPageFooter();
+  y = 36;
+  y = para('Based on the emission profile identified, the following actions are recommended to reduce Scope 3 emissions, close data gaps, and strengthen CSRD ESRS E1 compliance. Actions are ranked by estimated impact and urgency.', y, 9, INK); y+=5;
+  d.recommendations.forEach((r,idx)=>{
+    if(y>H-42){doc.addPage();addPageHeader('Recommendations (continued)');addPageFooter();y=36;}
+    const pColors={CRITICAL:[255,77,109],HIGH:[255,159,0],MEDIUM:[0,229,204],LOW:[100,115,130]};
+    const pC=pColors[r.priority]||[100,115,130];
+    const cardH=r.saving?31:25;
+    doc.setFillColor(12,20,42); doc.roundedRect(M,y-2,TEXT_W,cardH,2,2,'F');
+    doc.setFillColor(...pC); doc.rect(M,y-2,3,cardH,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...pC);
+    doc.text(`${r.priority}  ·  Action ${idx+1}`, M+7, y+4);
+    doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(...INK);
+    doc.text(r.title, M+7, y+11);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
+    const lines=doc.splitTextToSize(r.desc,TEXT_W-10);
+    doc.text(lines.slice(0,2),M+7,y+17);
+    if(r.saving){doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...LIME);doc.text(r.saving,M+7,y+cardH-4);}
+    y+=cardH+4;
+  });
+  y+=4;
+  y = sectionH2('Implementation Timeline', y);
+  const timeline=[['Immediate (0–30 days)','Request missing category data from supplier using the auto-generated gap request email. Initiate a supplier carbon data sharing agreement.'],['Short-term (1–3 months)','Evaluate low-carbon alternatives for the primary emission category. Request Environmental Product Declarations (EPDs) from key suppliers.'],['Medium-term (3–12 months)','Implement a supplier sustainability scorecard. Set category-level reduction targets aligned with Science Based Targets initiative (SBTi).'],['Long-term (1–3 years)','Transition primary material suppliers to verified low-carbon alternatives. Achieve CSRD ESRS E1 full disclosure readiness with third-party verification.']];
+  timeline.forEach(([phase,action])=>{
+    if(y>H-30){doc.addPage();addPageHeader('Recommendations (continued)');addPageFooter();y=36;}
+    doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(...TEAL);doc.text(phase,M,y);
+    doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(...MUTED);
+    const ls=doc.splitTextToSize(action,TEXT_W-2);doc.text(ls,M,y+5);
+    y+=5+ls.length*4+5;
+  });
+
+  // PAGE 6: METHODOLOGY
+  doc.addPage(); addPageHeader('Methodology, Standards & Disclaimer'); addPageFooter();
+  y = 36;
+  const methodSections=[
+    ['GHG Protocol Scope 3 Standard','This report is prepared in accordance with the GHG Protocol Corporate Value Chain (Scope 3) Accounting and Reporting Standard (WRI/WBCSD, 2011). Scope 3 emissions are all indirect GHG emissions that occur in the value chain of the reporting company, both upstream and downstream.'],
+    ['EU JRC EPLCA Emission Factor Database','Emission factors are sourced from the European Platform on Life Cycle Assessment (EPLCA), maintained by the European Commission Joint Research Centre (JRC). Each factor includes a unique dataset identifier, reference year, and geographic scope. Where a specific product factor is unavailable, the closest proxy dataset is applied and flagged as Uncertain.'],
+    ['IPCC Sixth Assessment Report (AR6) — GWP100','Global Warming Potential values are taken from the IPCC Sixth Assessment Report (2021), Working Group I, Annex II, Table AII.1.2. All emissions are expressed as CO₂ equivalents over a 100-year time horizon (GWP100), consistent with CSRD ESRS E1 requirements.'],
+    ['CSRD ESRS E1 Alignment','This report supports disclosure under ESRS E1 — Climate Change (CSRD, Directive 2022/2464/EU). The Scope 3 category structure, data quality ratings, and supplier engagement templates satisfy the data collection requirements of ESRS E1-6 (Gross Scope 1, 2, and 3 GHG emissions).'],
+    ['Disclaimer','This report is generated automatically based on information in the submitted invoice. Accuracy depends on the completeness and legibility of invoice data. Figures classified as Uncertain should be refined through supplier engagement before inclusion in formal CSRD disclosures. This report is a starting point for Scope 3 data collection, not a substitute for a full lifecycle assessment (LCA) or third-party verified GHG inventory.'],
+  ];
+  methodSections.forEach(([title,body])=>{
+    if(y>H-35){doc.addPage();addPageHeader('Methodology (continued)');addPageFooter();y=36;}
+    y=sectionH2(title,y);
+    y=para(body,y,8.5,MUTED);
+    y+=4;
+  });
+
+  doc.save(`CarbonCanary_Scope3_Report_${d.meta.inv}.pdf`);
+}
+
+// ─── WORD EXPORT (full professional narrative) ────────────────────────────────
+function exportWord() {
+  if (!currentData) return;
+  const d = currentData;
+  const dateStr = reportDate();
+  const langFull = langLabel(d.meta.lang);
+  const missing = missingCats(d);
+  const topEmitters = d.categories.filter(c=>c.value>0).sort((a,b)=>b.value-a.value);
+
+  const catRows = d.categories.map((c,i)=>{
+    const bg=c.conf==='mi'?'#f8f8f8':c.gapPct>30?'#fff5f5':c.gapPct>0?'#fffbf0':'#f5fcf7';
+    return `<tr style="background:${bg}">
+      <td style="text-align:center;font-weight:700;color:#007a6e">${c.id}</td>
+      <td style="font-weight:500">${CAT_DEFS[i].name}</td>
+      <td style="text-align:right;font-weight:700">${c.value>0?c.value.toFixed(1)+' t':'—'}</td>
+      <td style="text-align:center">${c.gapPct!==null?(c.gapPct>=0?'<span style="color:#b03535">+'+c.gapPct+'%</span>':'<span style="color:#2d8a4e">'+c.gapPct+'%</span>'):'N/A'}</td>
+      <td style="text-align:center"><span style="font-weight:600;color:${{ok:'#2d8a4e',un:'#b08030',mi:'#b03535'}[c.conf]}">${{ok:'✓ Confirmed',un:'~ Uncertain',mi:'✗ Missing'}[c.conf]}</span></td>
+    </tr>`;
+  }).join('');
+
+  const lineRows = d.lineItems.map(r=>`<tr>
+    <td style="font-weight:500">${r.field}</td><td>${r.val}</td>
+    <td style="text-align:right;font-weight:700">${r.co2.toFixed(1)} t</td>
+    <td style="text-align:center"><span style="font-weight:600;color:${{ok:'#2d8a4e',un:'#b08030',mi:'#b03535'}[r.conf]}">${{ok:'Confirmed',un:'Uncertain',mi:'Missing'}[r.conf]}</span></td>
+    <td style="font-size:8.5pt;color:#666">${r.source}</td>
+  </tr>`).join('');
+
+  const recCards = d.recommendations.map((r,i)=>{
+    const bColor={CRITICAL:'#b03535',HIGH:'#b08030',MEDIUM:'#007a6e',LOW:'#666'}[r.priority];
+    return `<div style="border-left:4px solid ${bColor};background:#fafafa;padding:14pt 16pt;margin-bottom:10pt;page-break-inside:avoid">
+      <p style="margin:0 0 4pt;font-size:8pt;font-weight:700;color:${bColor};letter-spacing:.05em">${r.priority} · Action ${i+1}</p>
+      <p style="margin:0 0 5pt;font-size:12pt;font-weight:700;color:#1a1a2e">${r.title}</p>
+      <p style="margin:0 0 6pt;font-size:10pt;color:#444;line-height:1.6">${r.desc}</p>
+      ${r.saving?`<p style="margin:0;font-size:9.5pt;font-weight:600;color:#007a6e">${r.saving}</p>`:''}
+    </div>`;
+  }).join('');
+
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8"><title>Carbon Canary · Scope 3 Report · ${d.meta.inv}</title>
+<style>
+  body{font-family:Calibri,'Segoe UI',Arial,sans-serif;font-size:11pt;color:#1a1a2e;line-height:1.6;margin:0;padding:0}
+  h1{font-size:26pt;font-weight:700;color:#007a6e;margin:0 0 4pt}
+  h2{font-size:14pt;font-weight:700;color:#007a6e;border-bottom:2pt solid #00b89c;padding-bottom:4pt;margin:22pt 0 10pt}
+  h3{font-size:11.5pt;font-weight:700;color:#1a1a2e;margin:14pt 0 5pt}
+  p{margin:0 0 9pt;font-size:10.5pt;line-height:1.65}
+  table{border-collapse:collapse;width:100%;margin-bottom:12pt;font-size:9.5pt}
+  thead tr{background:#007a6e}
+  thead th{color:#fff;font-weight:700;padding:7pt 9pt;text-align:left;font-size:9pt}
+  tbody td{padding:6pt 9pt;border-bottom:1pt solid #e8e9ed;vertical-align:top}
+  .cover{background:#07101f;color:#f0f4f8;padding:48pt 40pt;page-break-after:always}
+  .cover-brand{font-size:11pt;font-weight:700;color:#00e5cc;letter-spacing:.06em;margin-bottom:24pt}
+  .cover-title{font-size:32pt;font-weight:700;color:#f0f4f8;line-height:1.1;margin-bottom:8pt}
+  .cover-sub{font-size:12pt;color:#8899aa;margin-bottom:30pt}
+  .cover-score{background:#0d1a30;border-left:4pt solid #00e5cc;padding:20pt 24pt;margin-bottom:18pt}
+  .cover-score-num{font-size:48pt;font-weight:700;color:#b4ff4b;line-height:1;margin-bottom:4pt}
+  .cover-score-label{font-size:11pt;color:#8899aa}
+  .cover-meta{background:#0d1a30;padding:16pt 24pt;margin-bottom:18pt}
+  .meta-row{margin-bottom:5pt;font-size:10pt}
+  .meta-label{color:#5a6a7a;min-width:130pt;display:inline-block}
+  .meta-value{color:#c8d4e0;font-weight:600}
+  .cover-equivs{font-size:9pt;color:#5a6a7a;font-style:italic;margin-top:14pt}
+  .cover-footer{margin-top:28pt;border-top:1pt solid #1a2a40;padding-top:12pt;font-size:8pt;color:#3a4a5a}
+  .section{padding:0 40pt 24pt;page-break-before:always}
+  .kpi-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12pt;margin:14pt 0}
+  .kpi-card{background:#f5f6fa;border:1.5pt solid #e0e1e8;border-radius:6pt;padding:12pt 14pt}
+  .kpi-label{font-size:8pt;font-weight:600;color:#8a9aaa;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4pt}
+  .kpi-value{font-size:18pt;font-weight:700;color:#1a1a2e}
+  .kpi-sub{font-size:8.5pt;color:#8a9aaa;margin-top:2pt}
+  .note{background:#f0f8f6;border-left:3pt solid #007a6e;padding:10pt 14pt;font-size:9.5pt;color:#444;margin:12pt 0}
+  .footer-bar{background:#f5f6fa;border-top:1.5pt solid #e0e1e8;padding:10pt 40pt;font-size:8pt;color:#8a9aaa}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="cover-brand">🐦 CARBON CANARY · SCOPE 3 GHG INTELLIGENCE</div>
+  <div class="cover-title">Scope 3 Greenhouse Gas<br>Emissions Report</div>
+  <div class="cover-sub">EU JRC · IPCC AR6 · GHG Protocol · CSRD ESRS E1</div>
+  <div class="cover-score">
+    <div class="cover-score-num">${d.totalCO2e} t</div>
+    <div class="cover-score-label">CO₂ equivalent · Total Scope 3 Identified Emissions</div>
+  </div>
+  <div class="cover-meta">
+    <div class="meta-row"><span class="meta-label">Supplier</span><span class="meta-value">${d.meta.supplier}</span></div>
+    <div class="meta-row"><span class="meta-label">Invoice Reference</span><span class="meta-value">${d.meta.inv}</span></div>
+    <div class="meta-row"><span class="meta-label">Invoice Date</span><span class="meta-value">${d.meta.date}</span></div>
+    <div class="meta-row"><span class="meta-label">Document Language</span><span class="meta-value">${langFull}</span></div>
+    <div class="meta-row"><span class="meta-label">Confidence Score</span><span class="meta-value">${d.confidence} / 10</span></div>
+    <div class="meta-row"><span class="meta-label">vs EU SME Average</span><span class="meta-value">${d.euAvgDelta>=0?'+':''}${d.euAvgDelta}%</span></div>
+    <div class="meta-row"><span class="meta-label">Report Date</span><span class="meta-value">${dateStr}</span></div>
+  </div>
+  <div class="cover-equivs">${d.equivalents.map(e=>`<div style="margin-bottom:4pt">${e}</div>`).join('')}</div>
+  <div class="cover-footer">
+    EU JRC EPLCA &nbsp;·&nbsp; IPCC AR6 GWP100 &nbsp;·&nbsp; GHG Protocol Corporate Value Chain (Scope 3) Standard &nbsp;·&nbsp; CSRD ESRS E1<br>
+    <strong style="color:#c8d4e0">CONFIDENTIAL</strong> — Intended solely for the named organisation and their sustainability advisors.
+  </div>
+</div>
+
+<div class="section">
+  <h2>1. Executive Summary</h2>
+  <p>This report presents a comprehensive analysis of Scope 3 greenhouse gas (GHG) emissions arising from procurement activities documented in invoice <strong>${d.meta.inv}</strong> issued by <strong>${d.meta.supplier}</strong> on ${d.meta.date}. The analysis was conducted in accordance with the <em>GHG Protocol Corporate Value Chain (Scope 3) Accounting and Reporting Standard</em> and is aligned with the disclosure requirements of the <em>EU Corporate Sustainability Reporting Directive (CSRD)</em>, specifically <strong>ESRS E1 — Climate Change</strong>.</p>
+  <p>Carbon Canary processed the ${langFull} invoice, extracting emission-relevant line items and cross-referencing each against the <strong>EU JRC EPLCA</strong> emission factor database and <strong>IPCC AR6 GWP100</strong> values. Each data point was assessed for completeness and assigned an individual confidence rating.</p>
+  <p><strong>${euSentence(d)}</strong></p>
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">Total Scope 3 Emissions</div><div class="kpi-value">${d.totalCO2e} t</div><div class="kpi-sub">CO₂ equivalent (tCO₂e)</div></div>
+    <div class="kpi-card"><div class="kpi-label">Data Confidence</div><div class="kpi-value">${d.confidence}/10</div><div class="kpi-sub">Weighted source quality score</div></div>
+    <div class="kpi-card"><div class="kpi-label">vs EU SME Average</div><div class="kpi-value" style="color:${d.euAvgDelta>=0?'#b03535':'#2d8a4e'}">${d.euAvgDelta>=0?'+':''}${d.euAvgDelta}%</div><div class="kpi-sub">Sector benchmark comparison</div></div>
+  </div>
+  ${d.equivalents.map(e=>`<p style="font-size:9.5pt;color:#666;font-style:italic">${e}</p>`).join('')}
+  ${missing.length>0?`<h3>Data Gaps</h3><p>The following GHG Protocol Scope 3 categories could not be quantified due to insufficient information in the submitted invoice. Supplier engagement is recommended to close these gaps:</p><ul style="font-size:10pt;color:#444;line-height:2">${missing.map(n=>`<li>${n}</li>`).join('')}</ul><div class="note">A ready-to-send supplier data request email is provided in the analysis tool and can be sent directly to ${d.meta.supplier} to close these gaps.</div>`:''}
+</div>
+
+<div class="section">
+  <h2>2. Scope 3 Category Analysis</h2>
+  <p>The GHG Protocol Scope 3 Standard defines 15 upstream and downstream emission categories. This analysis covers the 8 upstream categories directly relevant to procurement. The table below shows identified emissions, a 0–100 index score relative to the sector maximum, and the deviation from the EU SME sector benchmark.</p>
+  <table>
+    <thead><tr><th style="width:5%">#</th><th>Category</th><th style="text-align:right;width:14%">Emissions</th><th style="text-align:center;width:15%">vs EU Avg</th><th style="text-align:center;width:18%">Data Quality</th></tr></thead>
+    <tbody>${catRows}</tbody>
+  </table>
+  ${topEmitters.length>0?`<h3>Key Findings</h3><p><strong>Primary emission source:</strong> ${CAT_DEFS[topEmitters[0].id-1].name} accounts for ${topEmitters[0].value.toFixed(1)} t CO₂e — ${((topEmitters[0].value/d.totalCO2e)*100).toFixed(0)}% of total identified Scope 3 emissions. ${CAT_DEFS[topEmitters[0].id-1].desc}. ${topEmitters[0].gapPct>30?'This category significantly exceeds the EU sector benchmark and should be treated as the highest-priority reduction target.':topEmitters[0].gapPct>0?'This category is above the EU sector benchmark and warrants active management.':'This category is performing within EU sector norms.'}</p>${topEmitters[1]?`<p><strong>Secondary emission source:</strong> ${CAT_DEFS[topEmitters[1].id-1].name} contributes ${topEmitters[1].value.toFixed(1)} t CO₂e (${((topEmitters[1].value/d.totalCO2e)*100).toFixed(0)}% of total) and should be included in the supplier carbon reduction roadmap.</p>`:''}`:''}
+</div>
+
+<div class="section">
+  <h2>3. Line Item Emission Detail</h2>
+  <p>The table below presents each emission-relevant item extracted from the invoice, the EU JRC or IPCC emission factor applied, the calculated CO₂e, and the confidence rating. Items rated as <em>Uncertain</em> use a proxy factor and should be refined through direct supplier data disclosure.</p>
+  <table>
+    <thead><tr><th>Line Item / Material</th><th style="width:14%">Quantity</th><th style="text-align:right;width:10%">CO₂e</th><th style="text-align:center;width:14%">Confidence</th><th>Emission Factor Source</th></tr></thead>
+    <tbody>${lineRows}</tbody>
+  </table>
+  <div class="note"><strong>Confidence ratings:</strong> <strong style="color:#2d8a4e">Confirmed</strong> = directly matched to a named EU JRC EPLCA dataset. <strong style="color:#b08030">Uncertain</strong> = proxy factor or estimated. <strong style="color:#b03535">Missing</strong> = no usable data; supplier input required.</div>
+</div>
+
+<div class="section">
+  <h2>4. Recommendations & Decarbonisation Roadmap</h2>
+  <p>The following actions are recommended to reduce Scope 3 emissions, close data gaps, and advance CSRD ESRS E1 compliance. Actions are ranked by estimated impact and urgency.</p>
+  ${recCards}
+  <h3>Implementation Timeline</h3>
+  <table>
+    <thead><tr><th style="width:22%">Timeframe</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td style="font-weight:600;color:#007a6e">Immediate (0–30 days)</td><td>Request missing category data from supplier using the auto-generated gap request email. Initiate a supplier carbon data sharing agreement.</td></tr>
+      <tr><td style="font-weight:600;color:#007a6e">Short-term (1–3 months)</td><td>Evaluate low-carbon alternatives for the primary emission category. Request Environmental Product Declarations (EPDs) from key suppliers.</td></tr>
+      <tr><td style="font-weight:600;color:#007a6e">Medium-term (3–12 months)</td><td>Implement a supplier sustainability scorecard. Set category-level reduction targets aligned with Science Based Targets initiative (SBTi).</td></tr>
+      <tr><td style="font-weight:600;color:#007a6e">Long-term (1–3 years)</td><td>Transition primary material suppliers to verified low-carbon alternatives. Achieve CSRD ESRS E1 full disclosure readiness with third-party verified data.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section">
+  <h2>5. Methodology & Standards</h2>
+  <h3>GHG Protocol Scope 3 Standard</h3>
+  <p>This report is prepared in accordance with the <em>GHG Protocol Corporate Value Chain (Scope 3) Accounting and Reporting Standard</em> (WRI/WBCSD, 2011). Scope 3 emissions are all indirect GHG emissions in the value chain of the reporting company, both upstream and downstream.</p>
+  <h3>EU JRC EPLCA Emission Factor Database</h3>
+  <p>Emission factors are sourced from the European Platform on Life Cycle Assessment (EPLCA), maintained by the European Commission's Joint Research Centre (JRC). Each factor includes a unique dataset identifier, reference year, and geographic scope. Where a specific product factor is unavailable, the closest proxy dataset is applied and flagged as <em>Uncertain</em>.</p>
+  <h3>IPCC Sixth Assessment Report (AR6) — GWP100</h3>
+  <p>Global Warming Potential values are taken from the IPCC Sixth Assessment Report (2021), Working Group I, Annex II, Table AII.1.2. All emissions are expressed as CO₂ equivalents over a 100-year time horizon (GWP100), consistent with CSRD ESRS E1 requirements.</p>
+  <h3>CSRD ESRS E1 Alignment</h3>
+  <p>This report supports disclosure under <strong>ESRS E1 — Climate Change</strong> (CSRD, Directive 2022/2464/EU). The Scope 3 category structure, data quality ratings, and supplier engagement templates satisfy the data collection requirements of <strong>ESRS E1-6</strong> (Gross Scope 1, 2, and 3 GHG emissions).</p>
+  <h3>Disclaimer</h3>
+  <p>This report is generated automatically based on information in the submitted invoice. Accuracy depends on the completeness and legibility of invoice data. Figures classified as <em>Uncertain</em> should be refined through supplier engagement before inclusion in formal CSRD disclosures. This report is a starting point for Scope 3 data collection, not a substitute for a full lifecycle assessment (LCA) or third-party verified GHG inventory.</p>
+</div>
+
+<div class="footer-bar">
+  Generated by Carbon Canary &nbsp;·&nbsp; EU JRC EPLCA + IPCC AR6 GWP100 + GHG Protocol Scope 3 + CSRD ESRS E1 &nbsp;·&nbsp; ${dateStr}
+</div>
+
+</body></html>`;
+
+  const blob = new Blob(['﻿'+html], {type:'application/msword;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `CarbonCanary_Scope3_Report_${d.meta.inv}.doc`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ─── RESET ────────────────────────────────────────────────────────────────────
+function reset() {
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('export-bar').classList.remove('show');
+  document.getElementById('nav-results-link').classList.add('hidden');
+  document.getElementById('hero').classList.remove('hidden');
+  document.querySelector('.how-section').classList.remove('hidden');
+  document.querySelectorAll('#methodology, footer').forEach(el => el.classList.remove('hidden'));
+
+  // Reset form
+  SEL = -1; currentData = null;
+  document.getElementById('fileInfo').classList.remove('show');
+  document.getElementById('fileInput').value = '';
+  document.querySelectorAll('.chip').forEach(c => { c.classList.remove('active'); c.setAttribute('aria-pressed','false'); });
+  document.getElementById('analyzeBtn').disabled = true;
+  document.querySelectorAll('.step').forEach(s => { s.classList.remove('active','done'); s.querySelector('.step-dot').textContent = ''; });
+  if (radarChart) { radarChart.destroy(); radarChart = null; }
+
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ─── EVENT LISTENERS ──────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Nav scroll
+  window.addEventListener('scroll', () => {
+    document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 8);
+  });
+
+  // File input
+  document.getElementById('fileInput').addEventListener('change', e => {
+    if (e.target.files[0]) handleFile(e.target.files[0]);
+  });
+
+  // Drag & drop
+  const dz = document.getElementById('dropZone');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    dz.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  dz.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); document.getElementById('fileInput').click(); } });
+
+  // Sample chips
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => triggerDemo(parseInt(chip.dataset.i)));
+    chip.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); triggerDemo(parseInt(chip.dataset.i)); } });
+  });
+
+  // Analyze button
+  document.getElementById('analyzeBtn').addEventListener('click', runAnalysis);
+
+  // Export buttons (both sets)
+  ['pdfBtn','pdfBtn2'].forEach(id => document.getElementById(id).addEventListener('click', exportPDF));
+  ['wordBtn','wordBtn2'].forEach(id => document.getElementById(id).addEventListener('click', exportWord));
+  ['resetBtn','resetBtn2'].forEach(id => document.getElementById(id).addEventListener('click', reset));
+
+  // Copy email
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    const d = currentData;
+    if (!d) return;
+    const e = d.emails[LANG];
+    navigator.clipboard.writeText(`To: ${e.to}\nSubject: ${e.subj}\n\n${e.body}`)
+      .then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => { btn.textContent = '📋 Copy Email'; }, 1500);
+      });
+  });
+
+  // Email language tabs
+  document.querySelectorAll('.email-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      LANG = tab.dataset.l;
+      updateEmailTabs();
+      if (currentData) renderEmail(currentData.emails);
+    });
+    tab.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tab.click(); }
+      if (e.key === 'ArrowRight') { const next = tab.nextElementSibling; if (next) { next.click(); next.focus(); } }
+      if (e.key === 'ArrowLeft') { const prev = tab.previousElementSibling; if (prev) { prev.click(); prev.focus(); } }
+    });
+  });
+
+  // Intersection observer for hero reveals
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, {threshold:0.1});
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+});
+</script>
+</body>
+</html>
